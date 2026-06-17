@@ -1,6 +1,7 @@
 import json
 import base64
 import streamlit as st
+import re
 from email.message import EmailMessage
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -21,24 +22,34 @@ class GoogleService:
 
     def _authenticate(self):
         try:
-            # Pega o segredo do Streamlit
             secret_data = st.secrets.get("GOOGLE_SERVICE_ACCOUNT")
-            
             if not secret_data:
                 raise Exception("Secret GOOGLE_SERVICE_ACCOUNT não encontrado.")
 
-            # Se for string, tenta converter para dicionário
             if isinstance(secret_data, str):
-                # Remove possíveis espaços em branco ou quebras de linha extras
-                secret_data = secret_data.strip()
-                service_account_info = json.loads(secret_data)
+                # LIMPEZA CRÍTICA: Remove caracteres de controle (como quebras de linha reais) 
+                # que quebram o parser de JSON, mas mantém os espaços normais.
+                clean_json = re.sub(r'[\x00-\x1F\x7F]', '', secret_data)
+                
+                # Se o regex removeu as quebras de linha necessárias da private_key, 
+                # o json.loads ainda pode falhar. Vamos tentar carregar.
+                try:
+                    service_account_info = json.loads(clean_json)
+                except:
+                    # Se falhar, tenta carregar o original mas limpando apenas as quebras de linha
+                    # que estão dentro de valores de string.
+                    service_account_info = json.loads(secret_data, strict=False)
             else:
-                # Se o Streamlit já converteu para dict (formato TOML)
                 service_account_info = dict(secret_data)
 
-            # CORREÇÃO CRÍTICA: Trata quebras de linha na private_key que o TOML costuma quebrar
+            # Garante que a private_key tenha os \n corretos para o Google
             if "private_key" in service_account_info:
-                service_account_info["private_key"] = service_account_info["private_key"].replace("\\n", "\n")
+                key = service_account_info["private_key"]
+                if "\\n" in key:
+                    service_account_info["private_key"] = key.replace("\\n", "\n")
+                elif "\n" not in key:
+                    # Caso a chave tenha vindo em uma linha só sem os \n
+                    st.warning("Atenção: A chave privada parece estar mal formatada.")
 
             creds = service_account.Credentials.from_service_account_info(
                 service_account_info,
@@ -47,8 +58,7 @@ class GoogleService:
             return creds
 
         except Exception as e:
-            st.error(f"Erro detalhado na autenticação Google: {e}")
-            raise Exception(f"Falha ao processar credenciais Google: {str(e)}")
+            raise Exception(f"Erro no processamento do JSON: {str(e)}")
 
     def add_event(self, summary, start_time, end_time, description=""):
         calendar_id = st.secrets.get("GOOGLE_CALENDAR_ID", "primary")
@@ -62,7 +72,7 @@ class GoogleService:
             created_event = self.calendar_service.events().insert(calendarId=calendar_id, body=event).execute()
             return created_event.get("htmlLink")
         except HttpError as e:
-            st.error(f"Erro ao criar evento no Calendar: {e}")
+            st.error(f"Erro Calendar: {e}")
             return None
 
     def send_email(self, to, subject, body):
@@ -76,5 +86,5 @@ class GoogleService:
             sent_message = self.gmail_service.users().messages().send(userId="me", body={"raw": encoded_message}).execute()
             return sent_message
         except HttpError as e:
-            st.error(f"Erro ao enviar e-mail via Gmail: {e}")
+            st.error(f"Erro Gmail: {e}")
             return None
