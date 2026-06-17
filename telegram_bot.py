@@ -2,7 +2,7 @@ import os
 import logging
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-import google.generativeai as genai
+from google import genai
 
 # Configuração de logs
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -12,10 +12,9 @@ class SalonTelegramBot:
         self.token = token
         self.salao_info = salao_info
         if gemini_key:
-            genai.configure(api_key=gemini_key)
-            self.model = genai.GenerativeModel('gemini-1.5-flash')
+            self.client = genai.Client(api_key=gemini_key)
         else:
-            self.model = None
+            self.client = None
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_keyboard = [['Agendar Horário', 'Ver Serviços'], ['Localização', 'Falar com Atendente']]
@@ -27,7 +26,7 @@ class SalonTelegramBot:
     async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_text = update.message.text
         
-        if self.model:
+        if self.client:
             prompt = f"""
             Você é a assistente virtual {self.salao_info['ia_nome']} do salão {self.salao_info['nome']}.
             Endereço: {self.salao_info['endereco']}
@@ -37,22 +36,19 @@ class SalonTelegramBot:
             
             Responda de forma gentil, profissional e curta. Se o cliente quiser agendar, peça o nome e o serviço.
             """
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(model="gemini-2.0-flash", contents=prompt)
             await update.message.reply_text(response.text)
         else:
-            await update.message.reply_text("Desculpe, meu cérebro (IA) não está configurado no momento, mas logo estarei pronta!")
+            await update.message.reply_text("Desculpe, meu cérebro (IA) não está configurado no momento.")
 
     def run(self):
         application = ApplicationBuilder().token(self.token).build()
-        
         application.add_handler(CommandHandler('start', self.start))
         application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), self.handle_message))
-        
         print("Bot do Telegram iniciado...")
         application.run_polling()
 
 if __name__ == '__main__':
-    # Exemplo de uso isolado
     from dotenv import load_dotenv
     load_dotenv()
     
