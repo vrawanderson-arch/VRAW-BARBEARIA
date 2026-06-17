@@ -1,11 +1,9 @@
-streamlit==1.58.0
+streamlit
 pandas
-plotly
-openpyxl
-google-generativeai==0.8.6
+google-genai
 python-dotenv
 python-telegram-bot
 google-auth
-google-auth-oauthlib
-google-auth-httplib2
 google-api-python-client
+plotly
+openpyxl
