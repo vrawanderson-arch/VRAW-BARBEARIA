@@ -1,21 +1,19 @@
-# ✂️ Guia Completo: Agente IA Salão de Beleza Pro
+# ✂️ Agente IA Salão de Beleza Pro (Versão Corrigida)
 
-Este guia explica como subir seu projeto para o **GitHub**, fazer o deploy no **Streamlit Cloud** e configurar todas as chaves de API passo a passo.
+Este guia explica como configurar seu projeto do zero, desde o GitHub até o funcionamento das APIs de IA, Telegram e Google.
 
 ---
 
 ## 🚀 Passo 1: Subir para o GitHub
 
-1.  Crie uma conta no [GitHub](https://github.com/) se não tiver.
-2.  Clique no botão **"+"** no canto superior direito e selecione **"New repository"**.
-3.  Dê um nome ao repositório (ex: `meu-salao-ia`) e clique em **"Create repository"**.
-4.  No seu computador, dentro da pasta do projeto, abra o terminal e execute:
+1.  Crie um novo repositório no [GitHub](https://github.com/) (ex: `agente-salao`).
+2.  Na pasta do projeto, execute:
     ```bash
     git init
     git add .
-    git commit -m "Primeiro commit"
+    git commit -m "Projeto Corrigido"
     git branch -M main
-    git remote add origin https://github.com/SEU_USUARIO/meu-salao-ia.git
+    git remote add origin https://github.com/SEU_USUARIO/agente-salao.git
     git push -u origin main
     ```
 
@@ -24,68 +22,64 @@ Este guia explica como subir seu projeto para o **GitHub**, fazer o deploy no **
 ## 🛠️ Passo 2: Deploy no Streamlit Cloud
 
 1.  Acesse o [Streamlit Cloud](https://share.streamlit.io/).
-2.  Clique em **"Create app"**.
-3.  Selecione seu repositório `meu-salao-ia`, a branch `main` e o arquivo principal `app.py`.
-4.  **IMPORTANTE:** Antes de clicar em "Deploy", clique em **"Advanced settings..."**.
-5.  Na caixa **"Secrets"**, você vai colar as chaves que vamos gerar nos próximos passos.
+2.  Conecte seu repositório e selecione o arquivo `app.py`.
+3.  **IMPORTANTE:** Antes de clicar em "Deploy", vá em **"Advanced settings..." > "Secrets"**.
 
 ---
 
-## 🔑 Passo 3: Conseguindo as Chaves de API
+## 🔑 Passo 3: Configurando os Secrets (O Coração do App)
 
-### 1. Google Gemini (Chat IA)
-1.  Acesse o [Google AI Studio](https://aistudio.google.com/app/apikey).
-2.  Clique em **"Create API key"**.
-3.  Copie a chave e guarde.
-
-### 2. Telegram Bot
-1.  No seu Telegram, procure por `@BotFather`.
-2.  Mande `/newbot` e siga as instruções (escolha nome e usuário).
-3.  Ele vai te dar um **API TOKEN**. Copie e guarde.
-
-### 3. Google Cloud (Calendar e Gmail)
-1.  Acesse o [Google Cloud Console](https://console.cloud.google.com/).
-2.  Crie um projeto.
-3.  Em **"APIs e Serviços" > "Biblioteca"**, ative: `Google Calendar API` e `Gmail API`.
-4.  Em **"Tela de Consentimento OAuth"**, escolha "Externo", coloque seu e-mail e em "Escopos" adicione `.../auth/calendar` e `.../auth/gmail.send`.
-5.  Em **"Credenciais"**, clique em **"+ Criar Credenciais" > "ID do cliente OAuth"**.
-6.  Escolha **"Aplicativo para computador"**.
-7.  Baixe o arquivo JSON. Abra ele com o bloco de notas e **copie todo o conteúdo**.
-
----
-
-## 🔐 Passo 4: Configurando os Secrets no Streamlit
-
-No painel do Streamlit Cloud (Advanced Settings > Secrets), cole o seguinte modelo e preencha com suas chaves:
+No campo **Secrets** do Streamlit Cloud, cole o código abaixo e preencha com suas chaves:
 
 ```toml
 GEMINI_API_KEY = "SUA_CHAVE_GEMINI"
 TELEGRAM_BOT_TOKEN = "SEU_TOKEN_TELEGRAM"
-SALAO_NOME = "Salão Bella"
-SALAO_ENDERECO = "Rua das Flores, 123"
-SALAO_TELEFONE = "(81) 99999-9999"
+SALAO_NOME = "Seu Salão"
+SALAO_ENDERECO = "Seu Endereço"
+SALAO_TELEFONE = "(XX) XXXXX-XXXX"
 IA_NOME = "Sofia"
 
-# Cole aqui TODO o conteúdo do arquivo JSON que você baixou do Google
-GOOGLE_CREDENTIALS_JSON = '''
+# Cole aqui TODO o conteúdo do arquivo JSON da sua Service Account do Google
+GOOGLE_SERVICE_ACCOUNT = '''
 {
-  "installed": {
-    "client_id": "...",
-    "project_id": "...",
-    ...
-  }
+  "type": "service_account",
+  "project_id": "...",
+  "private_key_id": "...",
+  "private_key": "-----BEGIN PRIVATE KEY-----\n...",
+  "client_email": "...",
+  ...
 }
 '''
 ```
 
 ---
 
-## 🏃‍♂️ Passo 5: Funcionamento
+## 🔑 Passo 4: Como conseguir cada chave
 
-1.  **Dashboard**: Assim que o app abrir, os gráficos já estarão lá.
-2.  **Agendamentos**: Ao criar um novo agendamento, se você configurou o Google corretamente, ele pedirá para você clicar em um link para autorizar o acesso (apenas na primeira vez).
-3.  **Telegram**: O bot do Telegram precisa de um servidor rodando. Se você estiver usando o Streamlit Cloud, o bot não rodará sozinho. Você deve rodar `python integrations/telegram_bot.py` em sua máquina local ou em um VPS para que ele responda aos clientes.
+### 1. Google Gemini (IA)
+1.  Acesse o [Google AI Studio](https://aistudio.google.com/app/apikey).
+2.  Clique em **"Create API key"**.
+
+### 2. Telegram Bot
+1.  Fale com o `@BotFather` no Telegram.
+2.  Use `/newbot` e pegue o **API Token**.
+
+### 3. Google Calendar e Gmail (Service Account)
+1.  Acesse o [Google Cloud Console](https://console.cloud.google.com/).
+2.  Crie um projeto e ative as APIs: `Google Calendar API` e `Gmail API`.
+3.  Vá em **"IAM e Administrador" > "Contas de Serviço"**.
+4.  Crie uma conta, vá na aba **"Chaves" > "Adicionar Chave" > "Criar nova chave" (JSON)**.
+5.  **IMPORTANTE:** Abra esse JSON e cole o conteúdo no secret `GOOGLE_SERVICE_ACCOUNT` (conforme Passo 3).
+6.  Para o Gmail funcionar, você deve autorizar o e-mail da service account a enviar e-mails ou usar delegação. *Dica: Para testes simples, o Calendar é mais imediato.*
 
 ---
 
-**Dúvidas?** Consulte a documentação oficial do Streamlit ou as APIs do Google.
+## 🏃‍♂️ Passo 5: Funcionamento
+
+1.  **Dashboard**: Gráficos automáticos baseados nos seus agendamentos.
+2.  **Agendamentos**: Salva localmente na sessão e tenta enviar para o Google Calendar/Gmail se configurados.
+3.  **Telegram**: Para rodar o bot, execute `python telegram_bot.py` em um terminal (local ou servidor).
+
+---
+
+**Desenvolvido por Manus AI**
