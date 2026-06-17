@@ -1,0 +1,11 @@
+streamlit==1.58.0
+pandas
+plotly
+openpyxl
+google-generativeai==0.8.6
+python-dotenv
+python-telegram-bot
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
