@@ -1,9 +1,0 @@
-streamlit
-pandas
-google-genai
-python-dotenv
-python-telegram-bot
-google-auth
-google-api-python-client
-plotly
-openpyxl
